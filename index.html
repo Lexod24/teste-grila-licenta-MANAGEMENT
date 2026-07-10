@@ -68,16 +68,15 @@
 <script src="data.js"></script>
 <script>
   let currentKey = "management", score = 0, answered = 0;
-  const allQuestions = [...Object.values(QUIZ_DATA).flatMap(s => s.questions)];
   
   function getQuestionsForCurrent() {
-    if (currentKey === "mix50") return [...allQuestions].sort(() => Math.random() - 0.5).slice(0, 50);
-    if (currentKey === "mix200") return [...allQuestions].sort(() => Math.random() - 0.5);
+    const all = Object.values(QUIZ_DATA).flatMap(s => s.questions);
+    if (currentKey === "mix50") return [...all].sort(() => Math.random() - 0.5).slice(0, 50);
+    if (currentKey === "mix200") return [...all].sort(() => Math.random() - 0.5);
     return [...QUIZ_DATA[currentKey].questions].sort(() => Math.random() - 0.5);
   }
 
-  function updateProgress() {
-    const total = getQuestionsForCurrent().length;
+  function updateProgress(total) {
     const percent = (answered / total) * 100;
     document.getElementById("counterText").innerText = `${answered} din ${total} întrebări`;
     document.getElementById("progressBar").style.width = `${percent}%`;
@@ -90,7 +89,7 @@
       `<button class="btn-nav ${k===currentKey?'active':''}" onclick="setSub('${k}')">${k === "mix50" ? "Mix 50" : k === "mix200" ? "Mix 200" : QUIZ_DATA[k].label}</button>`).join('');
     
     const qs = getQuestionsForCurrent();
-    updateProgress();
+    updateProgress(qs.length);
     
     document.getElementById("app").innerHTML = qs.map((q, i) => `
       <div class="question-card" id="q${i}">
@@ -107,18 +106,22 @@
     const card = document.getElementById(`q${qIdx}`);
     if(card.querySelector('.feedback')) return;
     
-    answered++; if(oIdx === q.a) score++;
-    updateProgress();
+    answered++; 
+    const corect = q.a; 
+    if(oIdx === corect) score++;
+    updateProgress(qs.length);
     
     card.querySelectorAll('.opt-btn').forEach((b, i) => {
       b.disabled = true;
-      if(i === q.a) b.classList.add('correct-ans');
-      if(i === oIdx && i !== q.a) b.classList.add('wrong-ans');
+      if(i === corect) b.classList.add('correct-ans');
+      if(i === oIdx && i !== corect) b.classList.add('wrong-ans');
     });
     
-    card.innerHTML += `<div class="feedback"><strong>${oIdx === q.a ? '✓ Corect' : '✗ Greșit'}</strong><br>
-      <span style="color:var(--correct)">Răspuns corect: ${String.fromCharCode(65+q.a)}</span><br>
-      <em>Motivație: ${q.m || 'Fără explicație'}</em></div>`;
+    card.innerHTML += `<div class="feedback">
+      <strong>${oIdx === corect ? '✓ Corect' : '✗ Greșit'}</strong><br>
+      <span style="color:var(--correct)">Răspuns corect: ${String.fromCharCode(65 + corect)}</span><br>
+      <em>Motivație: ${q.m || 'Fără explicație'}</em>
+    </div>`;
 
     if(answered === qs.length) {
       document.getElementById("app").innerHTML = `
