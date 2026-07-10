@@ -11,26 +11,44 @@
   }
   body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; padding: 20px; margin: 0; }
   .wrap { max-width: 650px; margin: auto; }
+  
   .sticky-header { position: sticky; top: 0; background: var(--bg); padding: 15px 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.1); }
   .progress-container { background: #1f2937; height: 10px; border-radius: 5px; margin: 10px 0; overflow: hidden; }
   .progress-bar { background: var(--accent); height: 100%; width: 0%; transition: width 0.4s ease; }
-  .btn-nav { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 8px 16px; margin: 4px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 13px; }
+  
+  .btn-nav { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 8px 16px; margin: 4px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 14px; }
   .btn-nav.active { background: var(--accent); border-color: var(--accent); }
-  .btn-reset { background: #374151; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
-  .question-card { background: var(--card); border: 1px solid rgba(255,255,255,0.1); padding: 24px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-  .opt-btn { width: 100%; text-align: left; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 14px; margin-bottom: 8px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; }
+  .btn-reset { background: #374151; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+
+  .question-card { background: var(--card); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 16px; margin-bottom: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+  
+  .q-text { font-size: 20px; font-weight: 600; margin-bottom: 20px; line-height: 1.4; }
+  
+  /* Răspunsuri mărite */
+  .opt-btn { 
+    width: 100%; text-align: left; background: rgba(255,255,255,0.03); 
+    border: 1px solid rgba(255,255,255,0.1); color: var(--text); 
+    padding: 20px; /* Padding generos pentru atingere ușoară */
+    margin-bottom: 12px; border-radius: 12px; cursor: pointer; 
+    transition: all 0.2s ease; 
+    font-size: 17px; /* Font mărit pentru variante */
+    line-height: 1.3;
+  }
+  
   .opt-btn:hover:not(:disabled) { background: rgba(255,255,255,0.1); border-color: var(--accent); }
   .correct-ans { background: rgba(34,197,94,0.15) !important; border-color: var(--correct) !important; }
   .wrong-ans { background: rgba(239,68,68,0.15) !important; border-color: var(--wrong) !important; }
-  .feedback { margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 4px solid var(--accent); font-size: 14px; }
-  .final-score { text-align: center; padding: 40px; background: var(--card); border-radius: 16px; border: 1px solid var(--accent); }
+  
+  .feedback { margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 4px solid var(--accent); font-size: 15px; line-height: 1.5; }
+  .final-score { text-align: center; padding: 40px; background: var(--card); border-radius: 16px; border: 1px solid var(--accent); font-size: 18px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="sticky-header">
-    <h1 style="text-align:center; margin:0 0 15px; font-size: 24px;">Grile Licență</h1>
+    <h1 style="text-align:center; margin:0 0 15px; font-size: 26px;">Grile Licență</h1>
     <div id="nav" style="display:flex; justify-content:center; flex-wrap:wrap;"></div>
+    
     <div id="progressBox" style="margin-top: 15px;">
       <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px;">
         <span id="counterText">0 din 0</span>
@@ -39,6 +57,7 @@
       <div class="progress-container"><div id="progressBar" class="progress-bar"></div></div>
     </div>
   </div>
+
   <div id="app" style="margin-top:20px;"></div>
 </div>
 <script src="data.js"></script>
@@ -55,23 +74,20 @@
 
   function render() {
     score = 0; answered = 0;
-    currentQuestions = getQuestionsForCurrent(); // Salvăm întrebările amestecate pentru sesiune
-    
+    currentQuestions = getQuestionsForCurrent();
     const navItems = [...Object.keys(QUIZ_DATA), "mix50", "mix200"];
     document.getElementById("nav").innerHTML = navItems.map(k => 
       `<button class="btn-nav ${k===currentKey?'active':''}" onclick="setSub('${k}')">${k === "mix50" ? "Mix 50" : k === "mix200" ? "Mix 200" : QUIZ_DATA[k].label}</button>`).join('');
     
-    updateProgress();
-    
+    updateProgress(currentQuestions.length);
     document.getElementById("app").innerHTML = currentQuestions.map((q, i) => `
       <div class="question-card" id="q${i}">
-        <div style="font-size:17px; margin-bottom:12px;"><strong>${i+1}.</strong> ${q.q}</div>
+        <div class="q-text"><strong>${i+1}.</strong> ${q.q}</div>
         ${q.o.map((o, oi) => `<button class="opt-btn" onclick="check(${i}, ${oi})">${String.fromCharCode(65+oi)}. ${o}</button>`).join('')}
       </div>`).join('');
   }
 
-  function updateProgress() {
-    const total = currentQuestions.length;
+  function updateProgress(total) {
     const percent = (answered / total) * 100;
     document.getElementById("counterText").innerText = `${answered} din ${total} întrebări`;
     document.getElementById("progressBar").style.width = `${percent}%`;
@@ -80,14 +96,14 @@
   function setSub(k) { currentKey = k; render(); }
 
   function check(qIdx, oIdx) {
-    const q = currentQuestions[qIdx]; // Accesăm întrebarea din sesiunea curentă
+    const q = currentQuestions[qIdx];
     const card = document.getElementById(`q${qIdx}`);
     if(card.querySelector('.feedback')) return;
     
     answered++; 
     const corect = q.a; 
     if(oIdx === corect) score++;
-    updateProgress();
+    updateProgress(currentQuestions.length);
     
     card.querySelectorAll('.opt-btn').forEach((b, i) => {
       b.disabled = true;
