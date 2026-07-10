@@ -9,11 +9,11 @@
     --bg:#050505; --card:#0f0f12; --accent:#3b82f6; 
     --correct:#22c55e; --wrong:#ef4444; --text:#f8fafc;
   }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; padding: 20px; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; padding: 20px; margin: 0; }
   .wrap { max-width: 650px; margin: auto; }
   
   .sticky-header {
-    position: sticky; top: 0; background: var(--bg); padding: 10px 0;
+    position: sticky; top: 0; background: var(--bg); padding: 15px 0;
     z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.1);
   }
   
@@ -73,7 +73,7 @@
   function getQuestionsForCurrent() {
     if (currentKey === "mix50") return [...allQuestions].sort(() => Math.random() - 0.5).slice(0, 50);
     if (currentKey === "mix200") return [...allQuestions].sort(() => Math.random() - 0.5);
-    return QUIZ_DATA[currentKey].questions;
+    return [...QUIZ_DATA[currentKey].questions].sort(() => Math.random() - 0.5);
   }
 
   function updateProgress() {
@@ -89,8 +89,9 @@
     document.getElementById("nav").innerHTML = navItems.map(k => 
       `<button class="btn-nav ${k===currentKey?'active':''}" onclick="setSub('${k}')">${k === "mix50" ? "Mix 50" : k === "mix200" ? "Mix 200" : QUIZ_DATA[k].label}</button>`).join('');
     
-    updateProgress();
     const qs = getQuestionsForCurrent();
+    updateProgress();
+    
     document.getElementById("app").innerHTML = qs.map((q, i) => `
       <div class="question-card" id="q${i}">
         <div style="font-size:17px; margin-bottom:12px;"><strong>${i+1}.</strong> ${q.q}</div>
