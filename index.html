@@ -20,7 +20,6 @@
   .btn-nav.active { background: var(--accent); border-color: var(--accent); }
   .btn-reset { background: #374151; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; }
 
-  /* Cronometru: Albastru, ne-boldat */
   .timer-display { font-family: monospace; font-size: 16px; font-weight: normal; color: var(--accent); }
 
   .question-card { 
@@ -28,7 +27,9 @@
     padding: 25px; border-radius: 16px; margin-bottom: 20px; 
     box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
   }
-  .q-text { font-size: 18px; font-weight: 600; margin-bottom: 20px; line-height: 1.5; }
+  /* Text întrebare normal, cifră boldată */
+  .q-text { font-size: 18px; font-weight: normal; margin-bottom: 20px; line-height: 1.5; }
+  .q-number { font-weight: bold; margin-right: 8px; }
   
   .opt-btn { 
     display: block; width: 100%; text-align: left; background: rgba(255,255,255,0.03); 
@@ -171,7 +172,7 @@
           </div>`;
       }
       return `<div class="question-card" id="q${i}">
-          <div class="q-text"><strong>${i+1}.</strong> ${q.q.replace(/(^|\s)([a-h]\))/g, '$1<br>$2')}</div>
+          <div class="q-text"><span class="q-number">${i+1}.</span> ${q.q.replace(/(^|\s)([a-h]\))/g, '$1<br>$2')}</div>
           ${optionsHtml}${feedbackHtml}
         </div>`;
     }).join('');
