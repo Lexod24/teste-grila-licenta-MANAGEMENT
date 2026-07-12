@@ -9,7 +9,7 @@
     --bg:#050505; --card:#0f0f12; --accent:#3b82f6; 
     --correct:#22c55e; --wrong:#ef4444; --text:#f8fafc;
   }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; padding: 20px; margin: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; padding: 20px; margin: 0; scroll-behavior: smooth; }
   .wrap { max-width: 650px; margin: auto; }
   
   .sticky-header { position: sticky; top: 0; background: var(--bg); padding: 15px 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.1); }
@@ -35,6 +35,15 @@
   
   .feedback { margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 4px solid var(--accent); font-size: 14px; }
   .final-score { text-align: center; padding: 40px; background: var(--card); border-radius: 16px; border: 1px solid var(--accent); font-size: 18px; }
+
+  /* Butonul Înapoi Sus */
+  #btnTop {
+    display: none; position: fixed; bottom: 30px; right: 30px; z-index: 99; 
+    font-size: 20px; border: none; background-color: var(--accent); color: white; 
+    cursor: pointer; padding: 12px 18px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
+    transition: background-color 0.3s;
+  }
+  #btnTop:hover { background-color: #2563eb; }
 </style>
 </head>
 <body>
@@ -46,7 +55,7 @@
     <div id="progressBox" style="margin-top: 15px;">
       <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px;">
         <span id="counterText">0 din 0</span>
-        <button class="btn-reset" onclick="render()">Reset Test</button>
+        <button class="btn-reset" onclick="resetTest()">Reset Test</button>
       </div>
       <div class="progress-container"><div id="progressBar" class="progress-bar"></div></div>
     </div>
@@ -54,10 +63,24 @@
 
   <div id="app" style="margin-top:20px;"></div>
 </div>
+
+<button id="btnTop" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="Înapoi Sus">↑</button>
+
 <script src="data.js"></script>
 <script>
   let currentKey = "management", score = 0, answered = 0;
   let currentQuestions = [];
+  let answeredState = {}; // Memorează starea testului pentru LocalStorage
+
+  // Controlează vizibilitatea butonului Înapoi Sus
+  window.onscroll = function() {
+    const btn = document.getElementById("btnTop");
+    if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+      btn.style.display = "block";
+    } else {
+      btn.style.display = "none";
+    }
+  };
 
   function getQuestionsForCurrent() {
     const all = Object.values(QUIZ_DATA).flatMap(s => s.questions);
@@ -66,41 +89,109 @@
     return [...QUIZ_DATA[currentKey].questions].sort(() => Math.random() - 0.5);
   }
 
-  function render() {
-    score = 0; answered = 0;
-    currentQuestions = getQuestionsForCurrent();
+  function saveState() {
+    const state = { currentKey, score, answered, currentQuestions, answeredState };
+    localStorage.setItem('quizState', JSON.stringify(state));
+  }
+
+  function init() {
+    const saved = localStorage.getItem('quizState');
+    if(saved) {
+      const parsed = JSON.parse(saved);
+      currentKey = parsed.currentKey;
+      score = parsed.score;
+      answered = parsed.answered;
+      currentQuestions = parsed.currentQuestions;
+      answeredState = parsed.answeredState || {};
+      render(false);
+    } else {
+      render(true);
+    }
+  }
+
+  function render(isNew = false) {
+    if(isNew) {
+      score = 0; answered = 0; answeredState = {};
+      currentQuestions = getQuestionsForCurrent();
+      saveState();
+    }
+
     const navItems = [...Object.keys(QUIZ_DATA), "mix50", "mix200"];
     document.getElementById("nav").innerHTML = navItems.map(k => 
       `<button class="btn-nav ${k===currentKey?'active':''}" onclick="setSub('${k}')">${k === "mix50" ? "Mix 50" : k === "mix200" ? "Mix 200" : QUIZ_DATA[k].label}</button>`).join('');
     
     updateProgress(currentQuestions.length);
-    document.getElementById("app").innerHTML = currentQuestions.map((q, i) => `
-      <div class="question-card" id="q${i}">
-        <div class="q-text">
-            <strong>${i+1}.</strong> ${q.q.replace(/(^|\s)([a-h]\))/g, '$1<br>$2')}
-        </div>
-        ${q.o.map((o, oi) => `<button class="opt-btn" onclick="check(${i}, ${oi})">${String.fromCharCode(65+oi)}. ${o}</button>`).join('')}
-      </div>`).join('');
+    
+    document.getElementById("app").innerHTML = currentQuestions.map((q, i) => {
+      const isAnswered = answeredState[i] !== undefined;
+      const oIdx = answeredState[i];
+      const corect = q.a;
+      
+      let optionsHtml = q.o.map((o, oi) => {
+        let cls = 'opt-btn';
+        if (isAnswered) {
+          if (oi === corect) cls += ' correct-ans';
+          if (oi === oIdx && oi !== corect) cls += ' wrong-ans';
+        }
+        return `<button class="${cls}" ${isAnswered ? 'disabled' : ''} onclick="check(${i}, ${oi})">${String.fromCharCode(65+oi)}. ${o}</button>`;
+      }).join('');
+
+      let feedbackHtml = '';
+      if (isAnswered) {
+        feedbackHtml = `
+          <div class="feedback">
+            <strong>${oIdx === corect ? '✓ Corect' : '✗ Greșit'}</strong><br>
+            <span style="color:var(--correct)">Răspuns corect: ${String.fromCharCode(65 + corect)}</span><br>
+            <em>Motivație: ${q.m || 'Fără explicație'}</em>
+          </div>`;
+      }
+
+      return `
+        <div class="question-card" id="q${i}">
+          <div class="q-text">
+              <strong>${i+1}.</strong> ${q.q.replace(/(^|\s)([a-h]\))/g, '$1<br>$2')}
+          </div>
+          ${optionsHtml}
+          ${feedbackHtml}
+        </div>`;
+    }).join('');
+
+    if(answered === currentQuestions.length && currentQuestions.length > 0) {
+      showFinalScore();
+    }
   }
 
   function updateProgress(total) {
-    const percent = (answered / total) * 100;
+    const percent = (total === 0) ? 0 : (answered / total) * 100;
     document.getElementById("counterText").innerText = `${answered} din ${total} întrebări`;
     document.getElementById("progressBar").style.width = `${percent}%`;
   }
 
-  function setSub(k) { currentKey = k; render(); }
+  function setSub(k) { 
+    currentKey = k; 
+    resetTest(); 
+  }
+
+  function resetTest() {
+    localStorage.removeItem('quizState');
+    render(true);
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
 
   function check(qIdx, oIdx) {
-    const q = currentQuestions[qIdx];
-    const card = document.getElementById(`q${qIdx}`);
-    if(card.querySelector('.feedback')) return;
+    if(answeredState[qIdx] !== undefined) return;
     
-    answered++; 
+    const q = currentQuestions[qIdx];
     const corect = q.a; 
+    
+    answeredState[qIdx] = oIdx;
+    answered++; 
     if(oIdx === corect) score++;
+    
+    saveState();
     updateProgress(currentQuestions.length);
     
+    const card = document.getElementById(`q${qIdx}`);
     card.querySelectorAll('.opt-btn').forEach((b, i) => {
       b.disabled = true;
       if(i === corect) b.classList.add('correct-ans');
@@ -114,18 +205,28 @@
     </div>`;
 
     if(answered === currentQuestions.length) {
+      setTimeout(() => showFinalScore(), 1000); 
+    } else {
       setTimeout(() => {
-        const procent = Math.round((score / answered) * 100);
-        document.getElementById("app").innerHTML = `
-          <div class="final-score">
-            <h2>Test Finalizat!</h2>
-            <p>Scor: <strong>${score}</strong> din <strong>${answered}</strong> (${procent}%)</p>
-            <button class="btn-nav" onclick="render()">Reia Testul</button>
-          </div>`;
-      }, 1500); 
+        const nextQ = document.getElementById(`q${qIdx + 1}`);
+        if (nextQ) nextQ.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 700);
     }
   }
-  render();
+
+  function showFinalScore() {
+    if(document.querySelector('.final-score')) return;
+    const procent = Math.round((score / answered) * 100);
+    document.getElementById("app").innerHTML += `
+      <div class="final-score">
+        <h2>Test Finalizat!</h2>
+        <p>Scor: <strong>${score}</strong> din <strong>${answered}</strong> (${procent}%)</p>
+        <button class="btn-nav" onclick="resetTest()">Reia Testul</button>
+      </div>`;
+  }
+
+  // Inițializează aplicația verificând LocalStorage
+  init();
 </script>
 </body>
 </html>
