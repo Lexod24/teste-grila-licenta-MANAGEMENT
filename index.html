@@ -24,7 +24,7 @@
     background: var(--card); border: 1px solid rgba(255,255,255,0.1); 
     padding: 25px; border-radius: 16px; margin-bottom: 20px; 
     box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
-    scroll-margin-top: 150px; /* Previne acoperirea textului de către meniul fix de sus */
+    scroll-margin-top: 150px; 
   }
   .q-text { font-size: 18px; font-weight: 600; margin-bottom: 20px; line-height: 1.5; }
   
@@ -41,7 +41,6 @@
   .feedback { margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 4px solid var(--accent); font-size: 14px; }
   .final-score { text-align: center; padding: 40px; background: var(--card); border-radius: 16px; border: 1px solid var(--accent); font-size: 18px; }
 
-  /* Butonul Înapoi Sus */
   #btnTop {
     display: none; position: fixed; bottom: 30px; right: 30px; z-index: 99; 
     font-size: 20px; border: none; background-color: var(--accent); color: white; 
@@ -213,9 +212,8 @@
     } else {
       setTimeout(() => {
         const nextQ = document.getElementById(`q${qIdx + 1}`);
-        // Modificat din 'center' în 'start' pentru a duce utilizatorul la începutul întrebării următoare
         if (nextQ) nextQ.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 700);
+      }, 3000);
     }
   }
 
