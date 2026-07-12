@@ -22,7 +22,9 @@
 
   .question-card { background: var(--card); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
   .q-text { font-size: 18px; font-weight: 600; margin-bottom: 20px; line-height: 1.5; }
-  .q-text span { display: block; margin-top: 8px; font-weight: 400; }
+  
+  /* Stil pentru literele din întrebare pentru a fi discrete dar vizibile */
+  .q-text .litera { color: var(--accent); margin-right: 4px; margin-left: 8px; }
   
   .opt-btn { 
     display: block; 
@@ -87,7 +89,7 @@
     document.getElementById("app").innerHTML = currentQuestions.map((q, i) => `
       <div class="question-card" id="q${i}">
         <div class="q-text">
-            <strong>${i+1}.</strong> ${q.q.replace(/([a-z]\))/g, '<span><strong>$1</strong></span>')}
+            <strong>${i+1}.</strong> ${q.q.replace(/([a-z]\))/g, '<strong class="litera">$1</strong>')}
         </div>
         ${q.o.map((o, oi) => `<button class="opt-btn" onclick="check(${i}, ${oi})">${String.fromCharCode(65+oi)}. ${o}</button>`).join('')}
       </div>`).join('');
