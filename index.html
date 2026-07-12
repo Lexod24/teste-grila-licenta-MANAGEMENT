@@ -24,7 +24,6 @@
     background: var(--card); border: 1px solid rgba(255,255,255,0.1); 
     padding: 25px; border-radius: 16px; margin-bottom: 20px; 
     box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
-    scroll-margin-top: 150px; 
   }
   .q-text { font-size: 18px; font-weight: 600; margin-bottom: 20px; line-height: 1.5; }
   
@@ -52,7 +51,7 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="sticky-header">
+  <div class="sticky-header" id="stickyHeader">
     <h1 style="text-align:center; margin:0 0 15px; font-size: 26px;">Grile Licență</h1>
     <div id="nav" style="display:flex; justify-content:center; flex-wrap:wrap;"></div>
     
@@ -212,7 +211,15 @@
     } else {
       setTimeout(() => {
         const nextQ = document.getElementById(`q${qIdx + 1}`);
-        if (nextQ) nextQ.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (nextQ) {
+          const headerHeight = document.getElementById('stickyHeader').offsetHeight;
+          const elementPosition = nextQ.getBoundingClientRect().top + window.scrollY;
+          // Scădem înălțimea antetului + un spațiu de 20px pentru estetică
+          window.scrollTo({
+            top: elementPosition - headerHeight - 20,
+            behavior: 'smooth'
+          });
+        }
       }, 3000);
     }
   }
