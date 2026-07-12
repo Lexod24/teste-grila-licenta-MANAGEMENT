@@ -141,7 +141,7 @@
       let feedbackHtml = '';
       if (isAnswered) {
         feedbackHtml = `
-          <div class="feedback">
+          <div class="feedback" id="feedback${i}">
             <strong>${oIdx === corect ? '✓ Corect' : '✗ Greșit'}</strong><br>
             <span style="color:var(--correct)">Răspuns corect: ${String.fromCharCode(65 + corect)}</span><br>
             <em>Motivație: ${q.m || 'Fără explicație'}</em>
@@ -200,21 +200,35 @@
       if(i === oIdx && i !== corect) b.classList.add('wrong-ans');
     });
     
-    card.innerHTML += `<div class="feedback">
-      <strong>${oIdx === corect ? '✓ Corect' : '✗ Greșit'}</strong><br>
-      <span style="color:var(--correct)">Răspuns corect: ${String.fromCharCode(65 + corect)}</span><br>
-      <em>Motivație: ${q.m || 'Fără explicație'}</em>
-    </div>`;
+    // Folosim insertAdjacentHTML pentru a adăuga motivația fără a distruge structura cardului
+    card.insertAdjacentHTML('beforeend', `
+      <div class="feedback" id="feedback${qIdx}">
+        <strong>${oIdx === corect ? '✓ Corect' : '✗ Greșit'}</strong><br>
+        <span style="color:var(--correct)">Răspuns corect: ${String.fromCharCode(65 + corect)}</span><br>
+        <em>Motivație: ${q.m || 'Fără explicație'}</em>
+      </div>
+    `);
 
+    // 1. Scroll imediat către secțiunea de motivație
+    const feedbackEl = document.getElementById(`feedback${qIdx}`);
+    if (feedbackEl) {
+      const headerHeight = document.getElementById('stickyHeader').offsetHeight;
+      const elementPosition = feedbackEl.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({
+        top: elementPosition - headerHeight - 20,
+        behavior: 'smooth'
+      });
+    }
+
+    // 2. Așteaptă 3 secunde pentru citire, apoi mergi la următoarea întrebare
     if(answered === currentQuestions.length) {
-      setTimeout(() => showFinalScore(), 1000); 
+      setTimeout(() => showFinalScore(), 3000); 
     } else {
       setTimeout(() => {
         const nextQ = document.getElementById(`q${qIdx + 1}`);
         if (nextQ) {
           const headerHeight = document.getElementById('stickyHeader').offsetHeight;
           const elementPosition = nextQ.getBoundingClientRect().top + window.scrollY;
-          // Scădem înălțimea antetului + un spațiu de 20px pentru estetică
           window.scrollTo({
             top: elementPosition - headerHeight - 20,
             behavior: 'smooth'
@@ -233,6 +247,17 @@
         <p>Scor: <strong>${score}</strong> din <strong>${answered}</strong> (${procent}%)</p>
         <button class="btn-nav" onclick="resetTest()">Reia Testul</button>
       </div>`;
+    
+    // Scroll către scorul final
+    const finalScoreEl = document.querySelector('.final-score');
+    if(finalScoreEl) {
+        const headerHeight = document.getElementById('stickyHeader').offsetHeight;
+        const elementPosition = finalScoreEl.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({
+            top: elementPosition - headerHeight - 20,
+            behavior: 'smooth'
+        });
+    }
   }
 
   init();
