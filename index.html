@@ -20,6 +20,8 @@
   .btn-nav.active { background: var(--accent); border-color: var(--accent); }
   .btn-reset { background: #374151; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; }
 
+  .timer-display { font-family: monospace; font-size: 16px; font-weight: bold; color: var(--accent); }
+
   .question-card { 
     background: var(--card); border: 1px solid rgba(255,255,255,0.1); 
     padding: 25px; border-radius: 16px; margin-bottom: 20px; 
@@ -58,6 +60,7 @@
     <div id="progressBox" style="margin-top: 15px;">
       <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px;">
         <span id="counterText">0 din 0</span>
+        <span id="timerDisplay" class="timer-display">00:00</span>
         <button class="btn-reset" onclick="resetTest()">Reset Test</button>
       </div>
       <div class="progress-container"><div id="progressBar" class="progress-bar"></div></div>
@@ -74,6 +77,9 @@
   let currentKey = "management", score = 0, answered = 0;
   let currentQuestions = [];
   let answeredState = {}; 
+  
+  let timeElapsed = 0;
+  let timerInterval = null;
 
   window.onscroll = function() {
     const btn = document.getElementById("btnTop");
@@ -84,6 +90,25 @@
     }
   };
 
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      timeElapsed++;
+      document.getElementById("timerDisplay").innerText = formatTime(timeElapsed);
+      if (timeElapsed % 5 === 0) saveState(); // Salvează la fiecare 5 secunde
+    }, 1000);
+  }
+
+  function stopTimer() {
+    clearInterval(timerInterval);
+  }
+
   function getQuestionsForCurrent() {
     const all = Object.values(QUIZ_DATA).flatMap(s => s.questions);
     if (currentKey === "mix50") return [...all].sort(() => Math.random() - 0.5).slice(0, 50);
@@ -92,7 +117,7 @@
   }
 
   function saveState() {
-    const state = { currentKey, score, answered, currentQuestions, answeredState };
+    const state = { currentKey, score, answered, currentQuestions, answeredState, timeElapsed };
     localStorage.setItem('quizState', JSON.stringify(state));
   }
 
@@ -105,6 +130,7 @@
       answered = parsed.answered;
       currentQuestions = parsed.currentQuestions;
       answeredState = parsed.answeredState || {};
+      timeElapsed = parsed.timeElapsed || 0;
       render(false);
     } else {
       render(true);
@@ -113,9 +139,17 @@
 
   function render(isNew = false) {
     if(isNew) {
-      score = 0; answered = 0; answeredState = {};
+      score = 0; answered = 0; answeredState = {}; timeElapsed = 0;
       currentQuestions = getQuestionsForCurrent();
       saveState();
+    }
+
+    document.getElementById("timerDisplay").innerText = formatTime(timeElapsed);
+    
+    if (answered < currentQuestions.length) {
+      startTimer();
+    } else {
+      stopTimer();
     }
 
     const navItems = [...Object.keys(QUIZ_DATA), "mix50", "mix200"];
@@ -175,6 +209,7 @@
   }
 
   function resetTest() {
+    stopTimer();
     localStorage.removeItem('quizState');
     render(true);
     window.scrollTo({top:0, behavior:'smooth'});
@@ -200,7 +235,6 @@
       if(i === oIdx && i !== corect) b.classList.add('wrong-ans');
     });
     
-    // Folosim insertAdjacentHTML pentru a adăuga motivația fără a distruge structura cardului
     card.insertAdjacentHTML('beforeend', `
       <div class="feedback" id="feedback${qIdx}">
         <strong>${oIdx === corect ? '✓ Corect' : '✗ Greșit'}</strong><br>
@@ -209,32 +243,22 @@
       </div>
     `);
 
-    // 1. Scroll imediat către secțiunea de motivație
-    const feedbackEl = document.getElementById(`feedback${qIdx}`);
-    if (feedbackEl) {
-      const headerHeight = document.getElementById('stickyHeader').offsetHeight;
-      const elementPosition = feedbackEl.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({
-        top: elementPosition - headerHeight - 20,
-        behavior: 'smooth'
-      });
-    }
+    setTimeout(() => {
+      const feedbackEl = document.getElementById(`feedback${qIdx}`);
+      if (feedbackEl) {
+        const headerHeight = document.getElementById('stickyHeader').offsetHeight;
+        const elementPosition = feedbackEl.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({
+          top: elementPosition - headerHeight - 20,
+          behavior: 'smooth'
+        });
+      }
+    }, 300);
 
-    // 2. Așteaptă 3 secunde pentru citire, apoi mergi la următoarea întrebare
     if(answered === currentQuestions.length) {
-      setTimeout(() => showFinalScore(), 3000); 
-    } else {
-      setTimeout(() => {
-        const nextQ = document.getElementById(`q${qIdx + 1}`);
-        if (nextQ) {
-          const headerHeight = document.getElementById('stickyHeader').offsetHeight;
-          const elementPosition = nextQ.getBoundingClientRect().top + window.scrollY;
-          window.scrollTo({
-            top: elementPosition - headerHeight - 20,
-            behavior: 'smooth'
-          });
-        }
-      }, 3000);
+      stopTimer();
+      saveState();
+      setTimeout(() => showFinalScore(), 1500); 
     }
   }
 
@@ -245,10 +269,10 @@
       <div class="final-score">
         <h2>Test Finalizat!</h2>
         <p>Scor: <strong>${score}</strong> din <strong>${answered}</strong> (${procent}%)</p>
-        <button class="btn-nav" onclick="resetTest()">Reia Testul</button>
+        <p style="color: var(--accent); margin-top: 10px;">Timp parcurs: <strong>${formatTime(timeElapsed)}</strong></p>
+        <button class="btn-nav" style="margin-top: 15px;" onclick="resetTest()">Reia Testul</button>
       </div>`;
     
-    // Scroll către scorul final
     const finalScoreEl = document.querySelector('.final-score');
     if(finalScoreEl) {
         const headerHeight = document.getElementById('stickyHeader').offsetHeight;
