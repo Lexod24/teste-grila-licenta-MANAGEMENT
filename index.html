@@ -20,7 +20,8 @@
   .btn-nav.active { background: var(--accent); border-color: var(--accent); }
   .btn-reset { background: #374151; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; }
 
-  .timer-display { font-family: monospace; font-size: 16px; font-weight: bold; color: var(--accent); }
+  /* Cronometru: Albastru, ne-boldat */
+  .timer-display { font-family: monospace; font-size: 16px; font-weight: normal; color: var(--accent); }
 
   .question-card { 
     background: var(--card); border: 1px solid rgba(255,255,255,0.1); 
@@ -77,7 +78,6 @@
   let currentKey = "management", score = 0, answered = 0;
   let currentQuestions = [];
   let answeredState = {}; 
-  
   let timeElapsed = 0;
   let timerInterval = null;
 
@@ -101,13 +101,10 @@
     timerInterval = setInterval(() => {
       timeElapsed++;
       document.getElementById("timerDisplay").innerText = formatTime(timeElapsed);
-      if (timeElapsed % 5 === 0) saveState(); // Salvează la fiecare 5 secunde
     }, 1000);
   }
 
-  function stopTimer() {
-    clearInterval(timerInterval);
-  }
+  function stopTimer() { clearInterval(timerInterval); }
 
   function getQuestionsForCurrent() {
     const all = Object.values(QUIZ_DATA).flatMap(s => s.questions);
@@ -117,8 +114,7 @@
   }
 
   function saveState() {
-    const state = { currentKey, score, answered, currentQuestions, answeredState, timeElapsed };
-    localStorage.setItem('quizState', JSON.stringify(state));
+    localStorage.setItem('quizState', JSON.stringify({ currentKey, score, answered, currentQuestions, answeredState, timeElapsed }));
   }
 
   function init() {
@@ -143,21 +139,14 @@
       currentQuestions = getQuestionsForCurrent();
       saveState();
     }
-
     document.getElementById("timerDisplay").innerText = formatTime(timeElapsed);
-    
-    if (answered < currentQuestions.length) {
-      startTimer();
-    } else {
-      stopTimer();
-    }
+    if (answered < currentQuestions.length) startTimer(); else stopTimer();
 
     const navItems = [...Object.keys(QUIZ_DATA), "mix50", "mix200"];
     document.getElementById("nav").innerHTML = navItems.map(k => 
       `<button class="btn-nav ${k===currentKey?'active':''}" onclick="setSub('${k}')">${k === "mix50" ? "Mix 50" : k === "mix200" ? "Mix 200" : QUIZ_DATA[k].label}</button>`).join('');
     
     updateProgress(currentQuestions.length);
-    
     document.getElementById("app").innerHTML = currentQuestions.map((q, i) => {
       const isAnswered = answeredState[i] !== undefined;
       const oIdx = answeredState[i];
@@ -175,26 +164,18 @@
       let feedbackHtml = '';
       if (isAnswered) {
         feedbackHtml = `
-          <div class="feedback" id="feedback${i}">
+          <div class="feedback">
             <strong>${oIdx === corect ? '✓ Corect' : '✗ Greșit'}</strong><br>
             <span style="color:var(--correct)">Răspuns corect: ${String.fromCharCode(65 + corect)}</span><br>
             <em>Motivație: ${q.m || 'Fără explicație'}</em>
           </div>`;
       }
-
-      return `
-        <div class="question-card" id="q${i}">
-          <div class="q-text">
-              <strong>${i+1}.</strong> ${q.q.replace(/(^|\s)([a-h]\))/g, '$1<br>$2')}
-          </div>
-          ${optionsHtml}
-          ${feedbackHtml}
+      return `<div class="question-card" id="q${i}">
+          <div class="q-text"><strong>${i+1}.</strong> ${q.q.replace(/(^|\s)([a-h]\))/g, '$1<br>$2')}</div>
+          ${optionsHtml}${feedbackHtml}
         </div>`;
     }).join('');
-
-    if(answered === currentQuestions.length && currentQuestions.length > 0) {
-      showFinalScore();
-    }
+    if(answered === currentQuestions.length && currentQuestions.length > 0) showFinalScore();
   }
 
   function updateProgress(total) {
@@ -203,10 +184,7 @@
     document.getElementById("progressBar").style.width = `${percent}%`;
   }
 
-  function setSub(k) { 
-    currentKey = k; 
-    resetTest(); 
-  }
+  function setSub(k) { currentKey = k; resetTest(); }
 
   function resetTest() {
     stopTimer();
@@ -217,49 +195,26 @@
 
   function check(qIdx, oIdx) {
     if(answeredState[qIdx] !== undefined) return;
-    
     const q = currentQuestions[qIdx];
-    const corect = q.a; 
-    
     answeredState[qIdx] = oIdx;
     answered++; 
-    if(oIdx === corect) score++;
-    
+    if(oIdx === q.a) score++;
     saveState();
     updateProgress(currentQuestions.length);
-    
     const card = document.getElementById(`q${qIdx}`);
     card.querySelectorAll('.opt-btn').forEach((b, i) => {
       b.disabled = true;
-      if(i === corect) b.classList.add('correct-ans');
-      if(i === oIdx && i !== corect) b.classList.add('wrong-ans');
+      if(i === q.a) b.classList.add('correct-ans');
+      if(i === oIdx && i !== q.a) b.classList.add('wrong-ans');
     });
-    
     card.insertAdjacentHTML('beforeend', `
-      <div class="feedback" id="feedback${qIdx}">
-        <strong>${oIdx === corect ? '✓ Corect' : '✗ Greșit'}</strong><br>
-        <span style="color:var(--correct)">Răspuns corect: ${String.fromCharCode(65 + corect)}</span><br>
+      <div class="feedback">
+        <strong>${oIdx === q.a ? '✓ Corect' : '✗ Greșit'}</strong><br>
+        <span style="color:var(--correct)">Răspuns corect: ${String.fromCharCode(65 + q.a)}</span><br>
         <em>Motivație: ${q.m || 'Fără explicație'}</em>
       </div>
     `);
-
-    setTimeout(() => {
-      const feedbackEl = document.getElementById(`feedback${qIdx}`);
-      if (feedbackEl) {
-        const headerHeight = document.getElementById('stickyHeader').offsetHeight;
-        const elementPosition = feedbackEl.getBoundingClientRect().top + window.scrollY;
-        window.scrollTo({
-          top: elementPosition - headerHeight - 20,
-          behavior: 'smooth'
-        });
-      }
-    }, 300);
-
-    if(answered === currentQuestions.length) {
-      stopTimer();
-      saveState();
-      setTimeout(() => showFinalScore(), 1500); 
-    }
+    if(answered === currentQuestions.length) { stopTimer(); saveState(); showFinalScore(); }
   }
 
   function showFinalScore() {
@@ -269,21 +224,10 @@
       <div class="final-score">
         <h2>Test Finalizat!</h2>
         <p>Scor: <strong>${score}</strong> din <strong>${answered}</strong> (${procent}%)</p>
-        <p style="color: var(--accent); margin-top: 10px;">Timp parcurs: <strong>${formatTime(timeElapsed)}</strong></p>
+        <p style="margin-top: 10px;">Timp total: <span class="timer-display">${formatTime(timeElapsed)}</span></p>
         <button class="btn-nav" style="margin-top: 15px;" onclick="resetTest()">Reia Testul</button>
       </div>`;
-    
-    const finalScoreEl = document.querySelector('.final-score');
-    if(finalScoreEl) {
-        const headerHeight = document.getElementById('stickyHeader').offsetHeight;
-        const elementPosition = finalScoreEl.getBoundingClientRect().top + window.scrollY;
-        window.scrollTo({
-            top: elementPosition - headerHeight - 20,
-            behavior: 'smooth'
-        });
-    }
   }
-
   init();
 </script>
 </body>
