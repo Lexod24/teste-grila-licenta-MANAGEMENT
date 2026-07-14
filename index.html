@@ -3,115 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grile Licență ULBS</title>
+<title>Grile Management</title>
 <style>
-  :root { 
-    --bg:#050505; --card:#0f0f12; --accent:#3b82f6; 
-    --correct:#22c55e; --wrong:#ef4444; --text:#f8fafc;
+  :root{
+    --bg:#0F1110; --bg-soft:#171A18; --card:#1C1F1D; --card-hover:#23271F;
+    --line:#2C302C; --ink:#EDEAE0; --ink-dim:#9A9C92; --ink-faint:#6B6E64;
+    --accent:#D7FF3F; --accent-ink:#0F1110;
+    --correct:#7FD858; --correct-bg:rgba(127,216,88,0.10); --correct-border:rgba(127,216,88,0.4);
+    --wrong:#FF6B5E; --wrong-bg:rgba(255,107,94,0.10); --wrong-border:rgba(255,107,94,0.4);
+    --radius-md:12px; --radius-sm:8px;
+    --display:"Fjalla One","Arial Narrow",sans-serif;
+    --serif:"Lora",Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:"JetBrains Mono",Consolas,Menlo,monospace;
   }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; padding: 20px; margin: 0; scroll-behavior: smooth; }
-  .wrap { max-width: 650px; margin: auto; }
-  .sticky-header { position: sticky; top: 0; background: var(--bg); padding: 15px 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.1); }
-  .progress-container { background: #1f2937; height: 10px; border-radius: 5px; margin: 10px 0; overflow: hidden; }
-  .progress-bar { background: var(--accent); height: 100%; width: 0%; transition: width 0.4s ease; }
-  .btn-nav { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 8px 16px; margin: 4px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 14px; }
-  .btn-nav.active { background: var(--accent); border-color: var(--accent); }
-  .btn-reset { background: #374151; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; }
-  .timer-display { font-family: monospace; font-size: 16px; font-weight: normal; color: var(--accent); }
-  .question-card { background: var(--card); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-  .q-text { font-size: 18px; font-weight: normal; margin-bottom: 20px; line-height: 1.5; }
-  .q-number { font-weight: bold; margin-right: 8px; }
-  .opt-btn { display: block; width: 100%; text-align: left; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 16px; margin-bottom: 12px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; font-size: 15px; }
-  .opt-btn:hover:not(:disabled) { background: rgba(255,255,255,0.1); border-color: var(--accent); }
-  .correct-ans { background: rgba(34,197,94,0.15) !important; border-color: var(--correct) !important; }
-  .wrong-ans { background: rgba(239,68,68,0.15) !important; border-color: var(--wrong) !important; }
-  .feedback { margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 4px solid var(--accent); font-size: 14px; }
-  .final-score { text-align: center; padding: 40px; background: var(--card); border-radius: 16px; border: 1px solid var(--accent); font-size: 18px; }
+  *{box-sizing:border-box;}
+  body{background:var(--bg); color:var(--ink); font-family:var(--sans); margin:0; min-height:100vh;}
+  .wrap{max-width:780px; margin:0 auto; padding:0 20px 90px;}
+  header.masthead{padding:44px 0 28px;}
+  h1.title{font-family:var(--display); font-size:52px; margin:0; color:var(--ink);}
+  .accent-word{color:var(--accent);}
+  .question-card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius-md); margin-bottom:14px; padding:20px;}
+  .q-text{font-family:var(--serif); font-size:19px; line-height:1.55; margin-bottom:20px;}
+  .opt-btn{text-align:left; background:var(--bg-soft); border:1px solid var(--line); border-radius:var(--radius-sm); padding:13px 16px; margin-bottom:9px; width:100%; cursor:pointer; color:var(--ink); display:flex; gap:11px;}
+  .opt-btn:hover:not(:disabled){background:#262A24;}
+  .opt-btn:disabled{cursor:default;}
+  .correct-answer{background:var(--correct-bg)!important; border-color:var(--correct-border)!important;}
+  .wrong-selected{background:var(--wrong-bg)!important; border-color:var(--wrong-border)!important;}
+  .q-feedback{font-family:var(--mono); font-size:14px; padding-top:10px;}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="sticky-header" id="stickyHeader">
-    <h1 style="text-align:center; margin:0 0 15px; font-size: 26px;">Grile Licență</h1>
-    <div id="nav" style="display:flex; justify-content:center; flex-wrap:wrap;"></div>
-    <div id="progressBox" style="margin-top: 15px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px;">
-        <span id="counterText">0 din 0</span>
-        <span id="timerDisplay" class="timer-display">00:00</span>
-        <button class="btn-reset" onclick="resetTest()">Reset Test</button>
-      </div>
-      <div class="progress-container"><div id="progressBar" class="progress-bar"></div></div>
-    </div>
-  </div>
-  <div id="app" style="margin-top:20px;"></div>
+  <header class="masthead">
+    <h1 class="title">Grile <span class="accent-word">licență</span></h1>
+  </header>
+  <main id="questionList"></main>
 </div>
 
 <script src="data.js"></script>
 <script>
-  let currentKey = "management", score = 0, answered = 0;
-  let currentQuestions = [];
-  let answeredState = {}; 
-  let timeElapsed = 0;
-  let timerInterval = null;
+(function(){
+  const LETTERS = ["A","B","C","D"];
+  const STORAGE_KEY = "ulbs_grile_progress_v3";
+  let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || { answers: {} };
 
-  function formatTime(s) { return Math.floor(s/60).toString().padStart(2,'0') + ':' + (s%60).toString().padStart(2,'0'); }
-  function startTimer() { clearInterval(timerInterval); timerInterval = setInterval(() => { timeElapsed++; document.getElementById("timerDisplay").innerText = formatTime(timeElapsed); }, 1000); }
-  function stopTimer() { clearInterval(timerInterval); }
-  function saveState() { localStorage.setItem('quizState', JSON.stringify({ currentKey, score, answered, currentQuestions, answeredState, timeElapsed })); }
+  function renderQuestions(){
+    const list = document.getElementById("questionList");
+    list.innerHTML = "";
+    
+    // Luăm întrebările dintr-o disciplină (exemplu: management)
+    const questions = QUIZ_DATA.management.questions;
 
-  function getQuestionsForCurrent() {
-    const all = Object.values(QUIZ_DATA).flatMap(s => s.questions);
-    if (currentKey === "mix50") return [...all].sort(() => Math.random() - 0.5).slice(0, 50);
-    if (currentKey === "mix200") return [...all].sort(() => Math.random() - 0.5);
-    return [...QUIZ_DATA[currentKey].questions].sort(() => Math.random() - 0.5);
+    questions.forEach((q, qIdx) => {
+      // 1. Pregătim opțiunile cu eticheta corectitudinii[cite: 1]
+      let optionsWithIndices = q.o.map((text, idx) => ({ text, isOriginalCorrect: idx === q.a }));
+
+      // 2. Amestecăm opțiunile (Fisher-Yates)[cite: 1]
+      for (let i = optionsWithIndices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [optionsWithIndices[i], optionsWithIndices[j]] = [optionsWithIndices[j], optionsWithIndices[i]];
+      }
+
+      const card = document.createElement("article");
+      card.className = "question-card";
+      card.innerHTML = `<div class="q-text">${q.q}</div>`;
+
+      const userAnswer = state.answers[qIdx];
+      const isAnswered = userAnswer !== undefined;
+
+      optionsWithIndices.forEach((opt, optIdx) => {
+        const btn = document.createElement("button");
+        btn.className = "opt-btn";
+        btn.innerHTML = `<span style="font-family:var(--mono); color:var(--ink-faint)">${LETTERS[optIdx]}</span><span>${opt.text}</span>`;
+
+        if(isAnswered){
+          btn.disabled = true;
+          if(opt.isOriginalCorrect) btn.classList.add("correct-answer");
+          else if(optIdx === userAnswer) btn.classList.add("wrong-selected");
+        } else {
+          btn.addEventListener("click", () => {
+            // Identificăm indexul original pentru a valida[cite: 1]
+            const originalIdx = q.o.indexOf(opt.text);
+            state.answers[qIdx] = originalIdx;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            renderQuestions();
+          });
+        }
+        card.appendChild(btn);
+      });
+      list.appendChild(card);
+    });
   }
-
-  function render(isNew = false) {
-    if(isNew) { score = 0; answered = 0; answeredState = {}; timeElapsed = 0; currentQuestions = getQuestionsForCurrent(); saveState(); }
-    document.getElementById("timerDisplay").innerText = formatTime(timeElapsed);
-    if (answered < currentQuestions.length) startTimer(); else stopTimer();
-
-    const navItems = [...Object.keys(QUIZ_DATA), "mix50", "mix200"];
-    document.getElementById("nav").innerHTML = navItems.map(k => `<button class="btn-nav ${k===currentKey?'active':''}" onclick="setSub('${k}')">${k === "mix50" ? "Mix 50" : k === "mix200" ? "Mix 200" : QUIZ_DATA[k].label}</button>`).join('');
-    updateProgress(currentQuestions.length);
-
-    document.getElementById("app").innerHTML = currentQuestions.map((q, i) => {
-      // MIXARE OPȚIUNI
-      let options = q.o.map((text, idx) => ({ text, isCorrect: idx === q.a }));
-      for (let j = options.length - 1; j > 0; j--) { const k = Math.floor(Math.random() * (j + 1)); [options[j], options[k]] = [options[k], options[j]]; }
-
-      const isAnswered = answeredState[i] !== undefined;
-      const userIdx = answeredState[i];
-      const correctIdx = options.findIndex(o => o.isCorrect);
-
-      let optionsHtml = options.map((opt, oi) => {
-        let cls = 'opt-btn';
-        if (isAnswered) { if (opt.isCorrect) cls += ' correct-ans'; if (oi === userIdx && !opt.isCorrect) cls += ' wrong-ans'; }
-        return `<button class="${cls}" ${isAnswered ? 'disabled' : ''} onclick="check(${i}, ${oi}, ${correctIdx})">${String.fromCharCode(65+oi)}. ${opt.text}</button>`;
-      }).join('');
-
-      let feedback = isAnswered ? `<div class="feedback"><strong>${userIdx === correctIdx ? '✓ Corect' : '✗ Greșit'}</strong><br><span style="color:var(--correct)">Corect: ${String.fromCharCode(65 + correctIdx)}</span><br><em>Motivație: ${q.m || 'Fără explicație'}</em></div>` : '';
-      return `<div class="question-card" id="q${i}"><div class="q-text"><span class="q-number">${i+1}.</span> ${q.q.replace(/(^|\s)([a-h]\))/g, '$1<br>$2')}</div>${optionsHtml}${feedback}</div>`;
-    }).join('');
-  }
-
-  function check(qIdx, selectedIdx, correctIdx) {
-    if(answeredState[qIdx] !== undefined) return;
-    answeredState[qIdx] = selectedIdx;
-    answered++; 
-    if(selectedIdx === correctIdx) score++;
-    saveState();
-    render(false);
-    if(answered === currentQuestions.length) { stopTimer(); showFinalScore(); }
-  }
-
-  function updateProgress(t) { document.getElementById("counterText").innerText = `${answered} din ${t} întrebări`; document.getElementById("progressBar").style.width = (answered/t)*100 + "%"; }
-  function setSub(k) { currentKey = k; resetTest(); }
-  function resetTest() { stopTimer(); localStorage.removeItem('quizState'); render(true); window.scrollTo({top:0, behavior:'smooth'}); }
-  function showFinalScore() { 
-    document.getElementById("app").innerHTML += `<div class="final-score"><h2>Test Finalizat!</h2><p>Scor: <strong>${score}</strong> din <strong>${answered}</strong> (${Math.round((score/answered)*100)}%)</p><p>Timp total: <span class="timer-display">${formatTime(timeElapsed)}</span></p><button class="btn-nav" style="margin-top:15px" onclick="resetTest()">Reia Testul</button></div>`;
-  }
-  init();
+  renderQuestions();
+})();
 </script>
 </body>
 </html>
