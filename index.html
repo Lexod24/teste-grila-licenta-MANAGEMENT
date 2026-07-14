@@ -11,46 +11,22 @@
   }
   body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; padding: 20px; margin: 0; scroll-behavior: smooth; }
   .wrap { max-width: 650px; margin: auto; }
-  
   .sticky-header { position: sticky; top: 0; background: var(--bg); padding: 15px 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.1); }
   .progress-container { background: #1f2937; height: 10px; border-radius: 5px; margin: 10px 0; overflow: hidden; }
   .progress-bar { background: var(--accent); height: 100%; width: 0%; transition: width 0.4s ease; }
-  
   .btn-nav { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 8px 16px; margin: 4px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 14px; }
   .btn-nav.active { background: var(--accent); border-color: var(--accent); }
   .btn-reset { background: #374151; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; }
-
   .timer-display { font-family: monospace; font-size: 16px; font-weight: normal; color: var(--accent); }
-
-  .question-card { 
-    background: var(--card); border: 1px solid rgba(255,255,255,0.1); 
-    padding: 25px; border-radius: 16px; margin-bottom: 20px; 
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
-  }
-  /* Text întrebare normal, cifră boldată */
+  .question-card { background: var(--card); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
   .q-text { font-size: 18px; font-weight: normal; margin-bottom: 20px; line-height: 1.5; }
   .q-number { font-weight: bold; margin-right: 8px; }
-  
-  .opt-btn { 
-    display: block; width: 100%; text-align: left; background: rgba(255,255,255,0.03); 
-    border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 16px; 
-    margin-bottom: 12px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; font-size: 15px; 
-  }
-  
+  .opt-btn { display: block; width: 100%; text-align: left; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 16px; margin-bottom: 12px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; font-size: 15px; }
   .opt-btn:hover:not(:disabled) { background: rgba(255,255,255,0.1); border-color: var(--accent); }
   .correct-ans { background: rgba(34,197,94,0.15) !important; border-color: var(--correct) !important; }
   .wrong-ans { background: rgba(239,68,68,0.15) !important; border-color: var(--wrong) !important; }
-  
   .feedback { margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 4px solid var(--accent); font-size: 14px; }
   .final-score { text-align: center; padding: 40px; background: var(--card); border-radius: 16px; border: 1px solid var(--accent); font-size: 18px; }
-
-  #btnTop {
-    display: none; position: fixed; bottom: 30px; right: 30px; z-index: 99; 
-    font-size: 20px; border: none; background-color: var(--accent); color: white; 
-    cursor: pointer; padding: 12px 18px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
-    transition: background-color 0.3s;
-  }
-  #btnTop:hover { background-color: #2563eb; }
 </style>
 </head>
 <body>
@@ -58,7 +34,6 @@
   <div class="sticky-header" id="stickyHeader">
     <h1 style="text-align:center; margin:0 0 15px; font-size: 26px;">Grile Licență</h1>
     <div id="nav" style="display:flex; justify-content:center; flex-wrap:wrap;"></div>
-    
     <div id="progressBox" style="margin-top: 15px;">
       <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px;">
         <span id="counterText">0 din 0</span>
@@ -68,11 +43,8 @@
       <div class="progress-container"><div id="progressBar" class="progress-bar"></div></div>
     </div>
   </div>
-
   <div id="app" style="margin-top:20px;"></div>
 </div>
-
-<button id="btnTop" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="Înapoi Sus">↑</button>
 
 <script src="data.js"></script>
 <script>
@@ -82,30 +54,10 @@
   let timeElapsed = 0;
   let timerInterval = null;
 
-  window.onscroll = function() {
-    const btn = document.getElementById("btnTop");
-    if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
-      btn.style.display = "block";
-    } else {
-      btn.style.display = "none";
-    }
-  };
-
-  function formatTime(seconds) {
-    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-    const s = (seconds % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
-  }
-
-  function startTimer() {
-    clearInterval(timerInterval);
-    timerInterval = setInterval(() => {
-      timeElapsed++;
-      document.getElementById("timerDisplay").innerText = formatTime(timeElapsed);
-    }, 1000);
-  }
-
+  function formatTime(s) { return Math.floor(s/60).toString().padStart(2,'0') + ':' + (s%60).toString().padStart(2,'0'); }
+  function startTimer() { clearInterval(timerInterval); timerInterval = setInterval(() => { timeElapsed++; document.getElementById("timerDisplay").innerText = formatTime(timeElapsed); }, 1000); }
   function stopTimer() { clearInterval(timerInterval); }
+  function saveState() { localStorage.setItem('quizState', JSON.stringify({ currentKey, score, answered, currentQuestions, answeredState, timeElapsed })); }
 
   function getQuestionsForCurrent() {
     const all = Object.values(QUIZ_DATA).flatMap(s => s.questions);
@@ -114,120 +66,50 @@
     return [...QUIZ_DATA[currentKey].questions].sort(() => Math.random() - 0.5);
   }
 
-  function saveState() {
-    localStorage.setItem('quizState', JSON.stringify({ currentKey, score, answered, currentQuestions, answeredState, timeElapsed }));
-  }
-
-  function init() {
-    const saved = localStorage.getItem('quizState');
-    if(saved) {
-      const parsed = JSON.parse(saved);
-      currentKey = parsed.currentKey;
-      score = parsed.score;
-      answered = parsed.answered;
-      currentQuestions = parsed.currentQuestions;
-      answeredState = parsed.answeredState || {};
-      timeElapsed = parsed.timeElapsed || 0;
-      render(false);
-    } else {
-      render(true);
-    }
-  }
-
   function render(isNew = false) {
-    if(isNew) {
-      score = 0; answered = 0; answeredState = {}; timeElapsed = 0;
-      currentQuestions = getQuestionsForCurrent();
-      saveState();
-    }
+    if(isNew) { score = 0; answered = 0; answeredState = {}; timeElapsed = 0; currentQuestions = getQuestionsForCurrent(); saveState(); }
     document.getElementById("timerDisplay").innerText = formatTime(timeElapsed);
     if (answered < currentQuestions.length) startTimer(); else stopTimer();
 
     const navItems = [...Object.keys(QUIZ_DATA), "mix50", "mix200"];
-    document.getElementById("nav").innerHTML = navItems.map(k => 
-      `<button class="btn-nav ${k===currentKey?'active':''}" onclick="setSub('${k}')">${k === "mix50" ? "Mix 50" : k === "mix200" ? "Mix 200" : QUIZ_DATA[k].label}</button>`).join('');
-    
+    document.getElementById("nav").innerHTML = navItems.map(k => `<button class="btn-nav ${k===currentKey?'active':''}" onclick="setSub('${k}')">${k === "mix50" ? "Mix 50" : k === "mix200" ? "Mix 200" : QUIZ_DATA[k].label}</button>`).join('');
     updateProgress(currentQuestions.length);
+
     document.getElementById("app").innerHTML = currentQuestions.map((q, i) => {
+      // MIXARE OPȚIUNI
+      let options = q.o.map((text, idx) => ({ text, isCorrect: idx === q.a }));
+      for (let j = options.length - 1; j > 0; j--) { const k = Math.floor(Math.random() * (j + 1)); [options[j], options[k]] = [options[k], options[j]]; }
+
       const isAnswered = answeredState[i] !== undefined;
-      const oIdx = answeredState[i];
-      const corect = q.a;
-      
-      let optionsHtml = q.o.map((o, oi) => {
+      const userIdx = answeredState[i];
+      const correctIdx = options.findIndex(o => o.isCorrect);
+
+      let optionsHtml = options.map((opt, oi) => {
         let cls = 'opt-btn';
-        if (isAnswered) {
-          if (oi === corect) cls += ' correct-ans';
-          if (oi === oIdx && oi !== corect) cls += ' wrong-ans';
-        }
-        return `<button class="${cls}" ${isAnswered ? 'disabled' : ''} onclick="check(${i}, ${oi})">${String.fromCharCode(65+oi)}. ${o}</button>`;
+        if (isAnswered) { if (opt.isCorrect) cls += ' correct-ans'; if (oi === userIdx && !opt.isCorrect) cls += ' wrong-ans'; }
+        return `<button class="${cls}" ${isAnswered ? 'disabled' : ''} onclick="check(${i}, ${oi}, ${correctIdx})">${String.fromCharCode(65+oi)}. ${opt.text}</button>`;
       }).join('');
 
-      let feedbackHtml = '';
-      if (isAnswered) {
-        feedbackHtml = `
-          <div class="feedback">
-            <strong>${oIdx === corect ? '✓ Corect' : '✗ Greșit'}</strong><br>
-            <span style="color:var(--correct)">Răspuns corect: ${String.fromCharCode(65 + corect)}</span><br>
-            <em>Motivație: ${q.m || 'Fără explicație'}</em>
-          </div>`;
-      }
-      return `<div class="question-card" id="q${i}">
-          <div class="q-text"><span class="q-number">${i+1}.</span> ${q.q.replace(/(^|\s)([a-h]\))/g, '$1<br>$2')}</div>
-          ${optionsHtml}${feedbackHtml}
-        </div>`;
+      let feedback = isAnswered ? `<div class="feedback"><strong>${userIdx === correctIdx ? '✓ Corect' : '✗ Greșit'}</strong><br><span style="color:var(--correct)">Corect: ${String.fromCharCode(65 + correctIdx)}</span><br><em>Motivație: ${q.m || 'Fără explicație'}</em></div>` : '';
+      return `<div class="question-card" id="q${i}"><div class="q-text"><span class="q-number">${i+1}.</span> ${q.q.replace(/(^|\s)([a-h]\))/g, '$1<br>$2')}</div>${optionsHtml}${feedback}</div>`;
     }).join('');
-    if(answered === currentQuestions.length && currentQuestions.length > 0) showFinalScore();
   }
 
-  function updateProgress(total) {
-    const percent = (total === 0) ? 0 : (answered / total) * 100;
-    document.getElementById("counterText").innerText = `${answered} din ${total} întrebări`;
-    document.getElementById("progressBar").style.width = `${percent}%`;
-  }
-
-  function setSub(k) { currentKey = k; resetTest(); }
-
-  function resetTest() {
-    stopTimer();
-    localStorage.removeItem('quizState');
-    render(true);
-    window.scrollTo({top:0, behavior:'smooth'});
-  }
-
-  function check(qIdx, oIdx) {
+  function check(qIdx, selectedIdx, correctIdx) {
     if(answeredState[qIdx] !== undefined) return;
-    const q = currentQuestions[qIdx];
-    answeredState[qIdx] = oIdx;
+    answeredState[qIdx] = selectedIdx;
     answered++; 
-    if(oIdx === q.a) score++;
+    if(selectedIdx === correctIdx) score++;
     saveState();
-    updateProgress(currentQuestions.length);
-    const card = document.getElementById(`q${qIdx}`);
-    card.querySelectorAll('.opt-btn').forEach((b, i) => {
-      b.disabled = true;
-      if(i === q.a) b.classList.add('correct-ans');
-      if(i === oIdx && i !== q.a) b.classList.add('wrong-ans');
-    });
-    card.insertAdjacentHTML('beforeend', `
-      <div class="feedback">
-        <strong>${oIdx === q.a ? '✓ Corect' : '✗ Greșit'}</strong><br>
-        <span style="color:var(--correct)">Răspuns corect: ${String.fromCharCode(65 + q.a)}</span><br>
-        <em>Motivație: ${q.m || 'Fără explicație'}</em>
-      </div>
-    `);
-    if(answered === currentQuestions.length) { stopTimer(); saveState(); showFinalScore(); }
+    render(false);
+    if(answered === currentQuestions.length) { stopTimer(); showFinalScore(); }
   }
 
-  function showFinalScore() {
-    if(document.querySelector('.final-score')) return;
-    const procent = Math.round((score / answered) * 100);
-    document.getElementById("app").innerHTML += `
-      <div class="final-score">
-        <h2>Test Finalizat!</h2>
-        <p>Scor: <strong>${score}</strong> din <strong>${answered}</strong> (${procent}%)</p>
-        <p style="margin-top: 10px;">Timp total: <span class="timer-display">${formatTime(timeElapsed)}</span></p>
-        <button class="btn-nav" style="margin-top: 15px;" onclick="resetTest()">Reia Testul</button>
-      </div>`;
+  function updateProgress(t) { document.getElementById("counterText").innerText = `${answered} din ${t} întrebări`; document.getElementById("progressBar").style.width = (answered/t)*100 + "%"; }
+  function setSub(k) { currentKey = k; resetTest(); }
+  function resetTest() { stopTimer(); localStorage.removeItem('quizState'); render(true); window.scrollTo({top:0, behavior:'smooth'}); }
+  function showFinalScore() { 
+    document.getElementById("app").innerHTML += `<div class="final-score"><h2>Test Finalizat!</h2><p>Scor: <strong>${score}</strong> din <strong>${answered}</strong> (${Math.round((score/answered)*100)}%)</p><p>Timp total: <span class="timer-display">${formatTime(timeElapsed)}</span></p><button class="btn-nav" style="margin-top:15px" onclick="resetTest()">Reia Testul</button></div>`;
   }
   init();
 </script>
